@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imagen a JSON - Gemini Vision</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #000;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .upload-section {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .upload-area {
+            border: 2px dashed #d0d0d0;
+            border-radius: 4px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #000;
+            background: #fff;
+        }
+
+        .upload-area.dragover {
+            border-color: #000;
+            background: #f0f0f0;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.6;
+        }
+
+        .upload-text {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .upload-subtitle {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-name {
+            color: #000;
+            font-weight: 500;
+            word-break: break-all;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            background: #000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: none;
+        }
+
+        .btn.show {
+            display: block;
+        }
+
+        .btn:hover {
+            background: #333;
+        }
+
+        .btn:active {
+            background: #000;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 14px;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+            font-size: 14px;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: #f0f0f0;
+            color: #000;
+            border: 1px solid #d0d0d0;
+        }
+
+        .message.error {
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: #e8e8e8;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+            display: none;
+            border: 1px solid #d0d0d0;
+        }
+
+        .progress-bar.show {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #000;
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .result-section {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .result-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .result-stats {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .json-container {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            background: #000;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #333;
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: #000;
+            border: 1px solid #d0d0d0;
+        }
+
+        .action-btn.secondary:hover {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Imagen a JSON</h1>
+        
+        <div class="upload-section">
+            <form id="uploadForm">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📸</div>
+                    <div class="upload-text">Sube una imagen o PDF de la tabla</div>
+                    <div class="upload-subtitle">PNG, JPG, PDF - Procesado con Gemini Vision AI</div>
+                    <input type="file" id="fileInput" class="file-input" accept="image/*,.pdf">
+                </div>
+
+                <div class="file-info" id="fileInfo">
+                    <div>📄 Archivo seleccionado:</div>
+                    <div class="file-name" id="fileName"></div>
+                </div>
+
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill">Procesando...</div>
+                </div>
+
+                <button type="submit" class="btn" id="uploadBtn">Procesar Imagen</button>
+            </form>
+
+            <div class="message" id="message"></div>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <div class="result-header">
+                <div class="result-title">JSON Generado</div>
+                <div class="result-stats" id="resultStats"></div>
+            </div>
+            
+            <div class="json-container" id="jsonContainer"></div>
+            
+            <div class="action-buttons">
+                <button class="action-btn" onclick="copyJSON()">📋 Copiar JSON</button>
+                <button class="action-btn" onclick="downloadJSON()">💾 Descargar JSON</button>
+                <button class="action-btn secondary" onclick="resetForm()">🔄 Nueva Imagen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const message = document.getElementById('message');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const resultSection = document.getElementById('resultSection');
+        const jsonContainer = document.getElementById('jsonContainer');
+        const resultStats = document.getElementById('resultStats');
+
+        let selectedFile = null;
+        let generatedJSON = null;
+
+        // Click en el área de subida
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Selección de archivo
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+
+            // Validar que sea una imagen o PDF
+            if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+                showMessage('Por favor selecciona una imagen o PDF', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = `${file.name} (${formatFileSize(file.size)})`;
+            fileInfo.classList.add('show');
+            uploadBtn.classList.add('show');
+            message.classList.remove('show');
+            resultSection.classList.remove('show');
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Enviar archivo
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!selectedFile) {
+                showMessage('Por favor selecciona una imagen', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Procesando con IA...';
+            progressBar.classList.add('show');
+            progressFill.style.width = '50%';
+            message.classList.remove('show');
+
+            try {
+                const response = await fetch('http://localhost:3000/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    progressFill.style.width = '100%';
+                    progressFill.textContent = 'Completado';
+                    
+                    generatedJSON = data.data;
+                    displayJSON(generatedJSON, data.recordsExtracted);
+                    
+                    showMessage(`Procesado exitosamente: ${data.recordsExtracted} registros extraídos`, 'success');
+                } else {
+                    showMessage(`Error: ${data.error || 'Error desconocido'}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`Error de red: ${error.message}`, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Procesar Imagen';
+                setTimeout(() => {
+                    progressBar.classList.remove('show');
+                    progressFill.style.width = '0%';
+                    progressFill.textContent = 'Procesando...';
+                }, 2000);
+            }
+        });
+
+        function displayJSON(json, count) {
+            jsonContainer.textContent = JSON.stringify(json, null, 2);
+            resultStats.textContent = `${count} registro${count !== 1 ? 's' : ''}`;
+            resultSection.classList.add('show');
+            
+            // Scroll al resultado
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function copyJSON() {
+            const jsonText = JSON.stringify(generatedJSON, null, 2);
+            navigator.clipboard.writeText(jsonText).then(() => {
+                showMessage('JSON copiado al portapapeles', 'success');
+            }).catch(() => {
+                showMessage('Error al copiar', 'error');
+            });
+        }
+
+        function downloadJSON() {
+            const jsonText = JSON.stringify(generatedJSON, null, 2);
+            const blob = new Blob([jsonText], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tabla-datos-${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage('JSON descargado', 'success');
+        }
+
+        function resetForm() {
+            selectedFile = null;
+            generatedJSON = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('show');
+            uploadBtn.classList.remove('show');
+            resultSection.classList.remove('show');
+            message.classList.remove('show');
+        }
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = `message show ${type}`;
+        }
+    </script>
+</body>
+</html>

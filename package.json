@@ -1,0 +1,20 @@
+{
+  "name": "upload-client",
+  "version": "1.0.0",
+  "description": "Convertidor de imágenes de tablas a JSON usando Gemini Vision",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["upload", "file", "express", "multer", "gemini", "ocr", "vision"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  }
+}
